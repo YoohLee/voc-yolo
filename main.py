@@ -51,9 +51,10 @@ def voc2yolo(xml_file: str) -> None:
     if class_exists:
         with open(f"{config.LABEL_DIR}/{xml_file[:-4]}.txt", "w") as out_file:
             for obj in tree.findall("object"):
-                difficult = obj.find("difficult").text
-                if int(difficult) == 1:
-                    continue
+                if obj.find("difficult") is not None:
+                    difficult = obj.find("difficult").text
+                    if int(difficult) == 1:
+                        continue
                 xml_box = obj.find("bndbox")
 
                 x_min = float(xml_box.find("xmin").text)
@@ -76,6 +77,9 @@ def voc2yolo(xml_file: str) -> None:
                 box_h = box_h * 1.0 / height
 
                 b = [box_x, box_y, box_w, box_h]
+
+                if obj.find("name") is None or obj.find("name").text not in config.names:
+                    continue
 
                 cls_id = config.names.index(obj.find("name").text)
                 out_file.write(str(cls_id) + " " + " ".join([str(f"{i:.6f}") for i in b]) + "\n")
